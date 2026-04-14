@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Smartmatcher",
+    "slug": "matchmaker-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fff1f2"
+    },
+    "scheme": "matchmaker",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.matchmaker.app"
+    },
+    "android": {
+      "package": "com.matchmaker.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fff1f2"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}

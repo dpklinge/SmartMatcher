@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── NextAuth Tables ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  emailVerified   DateTime?
+  phoneNumber     String?   @unique
+  phoneVerified   DateTime?
+  passwordHash    String?
+  name            String?
+  image           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  twoFactorEnabled Boolean         @default(false)
+  twoFactorMethod  String?
+  totpSecret       String?
+  smsOtpCode       String?
+  smsOtpExpiry     DateTime?
+
+  onboardingStep  String  @default("PROFILE_SETUP")
+
+  accounts        Account[]
+  sessions        Session[]
+  mobileRefreshTokens MobileRefreshToken[]
+  profile         Profile?
+  answers         QuestionnaireAnswer[]
+  priorities      AnswerPriority[]
+  swipesGiven     Swipe[]   @relation("SwipeActor")
+  swipesReceived  Swipe[]   @relation("SwipeTarget")
+  matchesAsUser1  Match[]   @relation("MatchUser1")
+  matchesAsUser2  Match[]   @relation("MatchUser2")
+}
+
+// ─── Profile ──────────────────────────────────────────────────────────────────
+
+model Profile {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio        String?
+  birthDate  DateTime?
+  gender     String?
+  seeking    String?
+  location     String?
+  occupation   String?
+  education    String?
+  height       Int?
+  latitude     Float?
+  longitude    Float?
+  searchRadius Int       @default(50)
+  photos       ProfilePhoto[]
+  updatedAt    DateTime  @updatedAt
+}
+
+model ProfilePhoto {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([profileId, order])
+}
+
+// ─── Questionnaire ────────────────────────────────────────────────────────────
+
+model Question {
+  id        String  @id @default(cuid())
+  key       String  @unique
+  category  String
+  text      String
+  type      String
+  options   String?
+  minLabel  String?
+  maxLabel  String?
+  order     Int
+  isActive  Boolean @default(true)
+
+  answers   QuestionnaireAnswer[]
+  priorities AnswerPriority[]
+}
+
+model QuestionnaireAnswer {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  value      String
+  answeredAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+// ─── Priorities ───────────────────────────────────────────────────────────────
+
+model AnswerPriority {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  importance String   @default("SOMEWHAT_IMPORTANT")
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+// ─── Swipes & Matches ─────────────────────────────────────────────────────────
+
+model Swipe {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation("SwipeActor", fields: [actorId], references: [id])
+  targetId  String
+  target    User     @relation("SwipeTarget", fields: [targetId], references: [id])
+  direction String
+  swipedAt  DateTime @default(now())
+
+  @@unique([actorId, targetId])
+  @@index([actorId])
+  @@index([targetId])
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user1     User     @relation("MatchUser1", fields: [user1Id], references: [id])
+  user2Id   String
+  user2     User     @relation("MatchUser2", fields: [user2Id], references: [id])
+  matchedAt DateTime @default(now())
+  score     Float
+
+  @@unique([user1Id, user2Id])
+}
+
+model CompatibilityCache {
+  id          String   @id @default(cuid())
+  requesterId String
+  targetId    String
+  score       Float
+  breakdown   String
+  computedAt  DateTime @default(now())
+
+  @@unique([requesterId, targetId])
+  @@index([requesterId])
+}
+
+// ─── Mobile JWT Refresh Tokens ────────────────────────────────────────────────
+
+model MobileRefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
