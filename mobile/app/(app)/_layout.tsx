@@ -25,6 +25,14 @@ export default function AppLayout() {
         options={{ title: "Matches", tabBarIcon: ({ color }) => <TabIcon emoji="💞" color={color} /> }}
       />
       <Tabs.Screen
+        name="activities"
+        options={{ title: "Activities", tabBarIcon: ({ color }) => <TabIcon emoji="🎉" color={color} /> }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{ title: "Messages", tabBarIcon: ({ color }) => <TabIcon emoji="💬" color={color} /> }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{ title: "Profile", tabBarIcon: ({ color }) => <TabIcon emoji="👤" color={color} /> }}
       />
@@ -34,6 +42,8 @@ export default function AppLayout() {
       />
       {/* Hidden routes — not shown in tab bar */}
       <Tabs.Screen name="preferences" options={{ href: null }} />
+      <Tabs.Screen name="activities/[id]" options={{ href: null }} />
+      <Tabs.Screen name="messages/[id]" options={{ href: null }} />
       <Tabs.Screen name="profile/[userId]" options={{ href: null }} />
     </Tabs>
   );

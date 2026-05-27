@@ -98,7 +98,11 @@ export async function GET(req: import("next/server").NextRequest) {
         compatibility: {
           score: compatibility.score,
           percentage: Math.round(compatibility.score * 100),
-          breakdown: compatibility.breakdown,
+          breakdown: Object.fromEntries(
+            Object.entries(compatibility.breakdown as Record<string, number>).map(
+              ([k, v]) => [k, Math.round(v * 100)]
+            )
+          ),
         },
       };
     })

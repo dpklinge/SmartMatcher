@@ -15,12 +15,14 @@ interface CardDeckProps {
 
 export default function CardDeck({ initialProfiles }: CardDeckProps) {
   const [profiles, setProfiles] = useState<CardProfile[]>(initialProfiles);
+  const [skipped, setSkipped] = useState<CardProfile[]>([]);
   const [matchProfile, setMatchProfile] = useState<CardProfile | null>(null);
   const [swiping, setSwiping] = useState(false);
 
   const handleSwipe = useCallback(async (direction: "like" | "pass") => {
     if (profiles.length === 0 || swiping) return;
     const top = profiles[0];
+    if (direction === "pass") setSkipped((prev) => [top, ...prev]);
     setSwiping(true);
     try {
       const data = await api.post<{ matched?: boolean; matchScore?: number }>("/api/swipe", {
@@ -37,6 +39,11 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
     setSwiping(false);
   }, [profiles, swiping]);
 
+  const handleReloadSkipped = useCallback(() => {
+    setProfiles((prev) => [...prev, ...skipped]);
+    setSkipped([]);
+  }, [skipped]);
+
   const handleSwipeLeft = useCallback(() => handleSwipe("pass"), [handleSwipe]);
   const handleSwipeRight = useCallback(() => handleSwipe("like"), [handleSwipe]);
 
@@ -46,6 +53,13 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
         <Text style={styles.emptyEmoji}>🔍</Text>
         <Text style={styles.emptyTitle}>No more profiles</Text>
         <Text style={styles.emptySubtitle}>Check back later for new matches!</Text>
+        {skipped.length > 0 && (
+          <TouchableOpacity onPress={handleReloadSkipped} style={styles.reloadBtn}>
+            <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.reloadGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+              <Text style={styles.reloadBtnText}>↩ Revisit {skipped.length} Skipped</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
@@ -93,6 +107,12 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {skipped.length > 0 && (
+        <TouchableOpacity onPress={handleReloadSkipped} style={styles.rewindRow}>
+          <Text style={styles.rewindText}>↩ Reload {skipped.length} skipped</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Match Modal */}
       <Modal visible={!!matchProfile} transparent animationType="fade">
@@ -145,6 +165,11 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 56 },
   emptyTitle: { fontSize: 22, fontWeight: "800", color: Colors.gray900 },
   emptySubtitle: { fontSize: 14, color: Colors.gray500 },
+  reloadBtn: { marginTop: 8, borderRadius: 16, overflow: "hidden", alignSelf: "stretch", marginHorizontal: 32 },
+  reloadGradient: { paddingVertical: 14, alignItems: "center" },
+  reloadBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  rewindRow: { marginTop: 6 },
+  rewindText: { fontSize: 13, color: Colors.gray400, fontWeight: "600" },
   // Match modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", alignItems: "center", justifyContent: "center", padding: 32 },
   modalCard: { width: "100%", backgroundColor: "#fff", borderRadius: 24, padding: 28, alignItems: "center", gap: 12 },

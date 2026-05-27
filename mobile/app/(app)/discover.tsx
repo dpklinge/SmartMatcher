@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, SafeAreaView } from "react-native";
+import { useState, useCallback, useRef } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
 import { api } from "@/lib/api";
 import { Colors } from "@/constants/colors";
 import CardDeck from "@/components/discover/CardDeck";
@@ -26,38 +28,49 @@ interface ApiCandidate {
 
 export default function DiscoverScreen() {
   const [profiles, setProfiles] = useState<CardProfile[]>([]);
+  const [deckKey, setDeckKey] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const prevProfileIdsRef = useRef("");
 
-  useEffect(() => {
-    api.get<{ candidates: ApiCandidate[] }>("/api/discover")
-      .then((data) => {
-        setProfiles(data.candidates.map((c) => {
-          const allPhotos = c.profile?.photos?.map((p) => p.url) ?? [];
-          const photoUrl = allPhotos[0] ?? c.image ?? undefined;
-          const age = c.profile?.birthDate
-            ? Math.floor((Date.now() - new Date(c.profile.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
-            : 0;
-          return {
-            id: c.id,
-            name: c.name,
-            age,
-            occupation: c.profile?.occupation ?? undefined,
-            location: c.profile?.location ?? undefined,
-            bio: c.profile?.bio ?? undefined,
-            photoUrl,
-            photos: allPhotos,
-            compatibilityScore: c.compatibility.percentage,
-            categoryBreakdown: c.compatibility.breakdown,
-          };
-        }));
-        setLoading(false);
-      })
-      .catch((e) => {
-        setError((e as Error).message);
-        setLoading(false);
-      });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setError("");
+      api.get<{ candidates: ApiCandidate[] }>("/api/discover")
+        .then((data) => {
+          const mapped = data.candidates.map((c) => {
+            const allPhotos = c.profile?.photos?.map((p) => p.url) ?? [];
+            const photoUrl = allPhotos[0] ?? c.image ?? undefined;
+            const age = c.profile?.birthDate
+              ? Math.floor((Date.now() - new Date(c.profile.birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+              : 0;
+            return {
+              id: c.id,
+              name: c.name,
+              age,
+              occupation: c.profile?.occupation ?? undefined,
+              location: c.profile?.location ?? undefined,
+              bio: c.profile?.bio ?? undefined,
+              photoUrl,
+              photos: allPhotos,
+              compatibilityScore: c.compatibility.percentage,
+              categoryBreakdown: c.compatibility.breakdown,
+            };
+          });
+          const newIds = mapped.map((p) => p.id).join(",");
+          if (newIds !== prevProfileIdsRef.current) {
+            prevProfileIdsRef.current = newIds;
+            setProfiles(mapped);
+            setDeckKey((k) => k + 1);
+          }
+          setLoading(false);
+        })
+        .catch((e) => {
+          if (!prevProfileIdsRef.current) setError((e as Error).message);
+          setLoading(false);
+        });
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -75,7 +88,7 @@ export default function DiscoverScreen() {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : (
-        <CardDeck initialProfiles={profiles} />
+        <CardDeck key={deckKey} initialProfiles={profiles} />
       )}
     </SafeAreaView>
   );

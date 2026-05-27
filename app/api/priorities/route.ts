@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
+import { recomputeMatchScores } from "@/lib/matching/recompute-matches";
 
 export async function GET(req: import("next/server").NextRequest) {
   const session = await getSession(req);
@@ -37,8 +38,9 @@ export async function POST(req: NextRequest) {
     data: { onboardingStep: "COMPLETE" },
   });
 
-  // Invalidate compatibility cache
+  // Invalidate compatibility cache and recompute match scores
   await prisma.compatibilityCache.deleteMany({ where: { requesterId: session.user.id } });
+  await recomputeMatchScores(session.user.id);
 
   return NextResponse.json({ success: true });
 }

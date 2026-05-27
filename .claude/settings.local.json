@@ -57,7 +57,19 @@
       "Bash(python -c \"import sys,json; vs=json.load\\(sys.stdin\\); print\\([v for v in vs if v.startswith\\('18'\\) or v.startswith\\('17'\\) or v.startswith\\('16'\\)][-6:]\\)\")",
       "Bash(python -c \"import sys,json; vs=json.load\\(sys.stdin\\); print\\([v for v in vs if 'canary' not in v and v.startswith\\('1'\\)][-10:]\\)\")",
       "Bash(node --env-file=.env.local prisma/seed-charlotte.mjs)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(ls mobile/app/\\\\\\(app\\\\\\)/activities*)",
+      "Bash(ls mobile/app/\\\\\\(app\\\\\\)/activities/)",
+      "Bash(dir C:\\\\Users\\\\Daniel\\\\IdeaProjects\\\\Matchmaker\\\\mobile\\\\app\\\\\\(app\\)\\\\activities:*)",
+      "Bash(node:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Daniel\\\\IdeaProjects\\\\Matchmaker\\\\mobile\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Select-Object -First 30)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Daniel\\\\IdeaProjects\\\\Matchmaker\\\\app\\\\api\\\\matches\\\\[matchId]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Daniel\\\\IdeaProjects\\\\Matchmaker\\\\app\\\\api\\\\swipe\\\\[swipeId]\")",
+      "Bash(Get-Item dev.db, prisma/dev.db)",
+      "Bash(Select-Object Name, FullName, Length)"
     ]
   }
 }

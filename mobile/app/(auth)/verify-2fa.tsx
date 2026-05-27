@@ -7,6 +7,13 @@ import { Colors } from "@/constants/colors";
 
 const BASE = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
 
+const STEP_ROUTES: Record<string, string> = {
+  PROFILE_SETUP: "/(onboarding)/profile-setup",
+  QUESTIONNAIRE: "/(onboarding)/questionnaire",
+  PRIORITIES: "/(onboarding)/priorities",
+  COMPLETE: "/(app)/discover",
+};
+
 export default function Verify2FAScreen() {
   const { pendingToken, method } = useLocalSearchParams<{ pendingToken: string; method: string }>();
   const [code, setCode] = useState("");
@@ -17,24 +24,28 @@ export default function Verify2FAScreen() {
   const handleVerify = async () => {
     if (code.length !== 6) { setError("Enter the 6-digit code"); return; }
     setLoading(true); setError("");
+    try {
+      const res = await fetch(`${BASE}/api/mobile/2fa/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${pendingToken}` },
+        body: JSON.stringify({ code }),
+      });
 
-    const res = await fetch(`${BASE}/api/mobile/2fa/verify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${pendingToken}` },
-      body: JSON.stringify({ code }),
-    });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "Invalid code");
+        return;
+      }
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error ?? "Invalid code");
+      const data = await res.json();
+      await setTokens(data.accessToken, data.refreshToken, data.user);
+      const route = STEP_ROUTES[data.user.onboardingStep] ?? "/(app)/discover";
+      router.replace(route as never);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const data = await res.json();
-    await setTokens(data.accessToken, data.refreshToken, data.user);
-    router.replace((data.user.onboardingStep === "COMPLETE" ? "/(app)/discover" : "/(onboarding)/profile-setup") as never);
-    setLoading(false);
   };
 
   return (

@@ -17,6 +17,7 @@
     "expo-location": "~18.1.6",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.8",
+    "@react-native-community/datetimepicker": "~8.2.0",
     "expo-image-picker": "~16.1.4",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",

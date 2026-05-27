@@ -62,8 +62,7 @@ function scoreRank(a: string, b: string): number {
   try {
     const rankA: string[] = JSON.parse(a);
     const rankB: string[] = JSON.parse(b);
-    const n = rankA.length;
-    if (n <= 1) return 1;
+    if (rankA.length <= 1) return 1;
 
     const posA: Record<string, number> = {};
     const posB: Record<string, number> = {};
@@ -74,14 +73,23 @@ function scoreRank(a: string, b: string): number {
     if (items.length <= 1) return 0;
 
     const m = items.length;
+
+    // Re-rank the overlapping items 1..m by their relative order in each list.
+    // Using raw positions from a longer list would make Σd² exceed the formula's
+    // theoretical maximum, producing rho < -1 and a negative mapped score.
+    const relA: Record<string, number> = {};
+    const relB: Record<string, number> = {};
+    [...items].sort((x, y) => posA[x] - posA[y]).forEach((item, i) => { relA[item] = i + 1; });
+    [...items].sort((x, y) => posB[x] - posB[y]).forEach((item, i) => { relB[item] = i + 1; });
+
     const dSquaredSum = items.reduce((sum, item) => {
-      const d = posA[item] - posB[item];
+      const d = relA[item] - relB[item];
       return sum + d * d;
     }, 0);
 
     const rho = 1 - (6 * dSquaredSum) / (m * (m * m - 1));
-    // Map from [-1, 1] to [0, 1]
-    return (rho + 1) / 2;
+    // Map [-1, 1] → [0, 1]; clamp guards against any floating-point edge cases.
+    return Math.max(0, Math.min(1, (rho + 1) / 2));
   } catch {
     return 0;
   }

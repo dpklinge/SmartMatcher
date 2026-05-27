@@ -75,6 +75,11 @@ model User {
   swipesReceived  Swipe[]   @relation("SwipeTarget")
   matchesAsUser1  Match[]   @relation("MatchUser1")
   matchesAsUser2  Match[]   @relation("MatchUser2")
+  activities      Activity[]
+  activityParticipants ActivityParticipant[]
+  conversations1  Conversation[] @relation("ConvUser1")
+  conversations2  Conversation[] @relation("ConvUser2")
+  sentMessages    Message[]
 }
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
@@ -194,6 +199,85 @@ model CompatibilityCache {
 
   @@unique([requesterId, targetId])
   @@index([requesterId])
+}
+
+// ─── Activities ───────────────────────────────────────────────────────────────
+
+model Activity {
+  id           String   @id @default(cuid())
+  title        String
+  description  String   @default("")
+  placeName    String
+  placeAddress String
+  latitude     Float?
+  longitude    Float?
+  dateTime     DateTime
+  priceMin     Int      @default(0)
+  priceMax     Int?
+  maxPeople    Int
+  isOpen       Boolean  @default(true)
+  isSponsored  Boolean  @default(false)
+  sponsorName  String?
+
+  creatorId    String?
+  creator      User?    @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  participants   ActivityParticipant[]
+  linkedMessages Message[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([creatorId])
+  @@index([dateTime])
+}
+
+model ActivityParticipant {
+  id         String   @id @default(cuid())
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     String   @default("APPROVED") // APPROVED | PENDING | REJECTED
+  joinedAt   DateTime @default(now())
+
+  @@unique([activityId, userId])
+  @@index([activityId])
+  @@index([userId])
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id            String    @id @default(cuid())
+  user1Id       String
+  user1         User      @relation("ConvUser1", fields: [user1Id], references: [id])
+  user2Id       String
+  user2         User      @relation("ConvUser2", fields: [user2Id], references: [id])
+  messages      Message[]
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id               String        @id @default(cuid())
+  conversationId   String
+  conversation     Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId         String
+  sender           User          @relation(fields: [senderId], references: [id])
+  body             String
+  linkedActivityId String?
+  linkedActivity   Activity?     @relation(fields: [linkedActivityId], references: [id], onDelete: SetNull)
+  readAt           DateTime?
+  createdAt        DateTime      @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
 
 // ─── Mobile JWT Refresh Tokens ────────────────────────────────────────────────

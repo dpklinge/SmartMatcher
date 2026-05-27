@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import { api } from "@/lib/api";
 import { Colors } from "@/constants/colors";
@@ -35,30 +36,46 @@ export default function UserProfileScreen() {
   }, [userId]);
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={Colors.rose500} /></View>;
+    return (
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backBtnText}>← Back</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.center}><ActivityIndicator size="large" color={Colors.rose500} /></View>
+      </SafeAreaView>
+    );
   }
 
   if (!profile) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>Profile not found</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
-          <Text style={styles.backLinkText}>← Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backBtnText}>← Back</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.center}>
+          <Text style={styles.errorText}>Profile not found</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   const compat = profile.compatibility;
   const scoreColor = compat
-    ? compat.percentage >= 80 ? "#10b981" : compat.percentage >= 60 ? "#f59e0b" : Colors.gray400
+    ? compat.percentage >= 80 ? "#39BF00" : compat.percentage >= 60 ? "#BFA900" : "#BF7300"
     : Colors.gray300;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-        <Text style={styles.backBtnText}>← Back</Text>
-      </TouchableOpacity>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#fff" }}>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
       {/* Photo & Name */}
       <View style={styles.heroSection}>
@@ -96,7 +113,7 @@ export default function UserProfileScreen() {
             const catKey = cat as QuestionCategory;
             const label = CATEGORY_LABELS[catKey] ?? cat;
             const icon = CATEGORY_ICONS[catKey] ?? "•";
-            const barColor = pct >= 80 ? "#10b981" : pct >= 60 ? "#f59e0b" : "#ef4444";
+            const barColor = pct >= 80 ? "#39BF00" : compat.percentage >= 60 ? "#BFA900" : "#BF7300";
             return (
               <View key={cat} style={styles.breakdownRow}>
                 <Text style={styles.breakdownIcon}>{icon}</Text>
@@ -124,7 +141,8 @@ export default function UserProfileScreen() {
           )}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -133,10 +151,9 @@ const styles = StyleSheet.create({
   content: { padding: 24, gap: 20, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   errorText: { fontSize: 14, color: "#ef4444" },
-  backLink: { padding: 8 },
-  backLinkText: { fontSize: 14, color: Colors.rose500 },
-  backBtn: { paddingVertical: 8 },
-  backBtnText: { fontSize: 14, fontWeight: "600", color: Colors.gray600 },
+  topBar: { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.gray100 },
+  backBtn: { alignSelf: "flex-start", paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.gray100, borderRadius: 22 },
+  backBtnText: { fontSize: 15, fontWeight: "700", color: Colors.gray700 },
   heroSection: { alignItems: "center", gap: 8 },
   photo: { width: 120, height: 120, borderRadius: 60 },
   photoPlaceholder: { width: 120, height: 120, borderRadius: 60, backgroundColor: "#fce7f3", alignItems: "center", justifyContent: "center" },

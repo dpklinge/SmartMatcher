@@ -84,7 +84,7 @@ export default function LoginScreen() {
         navigateAfterLogin(data.user.onboardingStep);
       }
     } catch (e) { setError("Invalid email or password"); }
-    setLoading(false);
+    finally { setLoading(false); }
   };
 
   const handleSendOtp = async () => {

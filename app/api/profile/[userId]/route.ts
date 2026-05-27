@@ -41,8 +41,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     compatibility: {
       score: result.score,
       percentage: result.percentage,
-      categoryBreakdown: result.categoryBreakdown,
-      alignedPriorities: result.alignedPriorities,
+      categoryBreakdown: Object.fromEntries(
+        Object.entries(result.categoryBreakdown).map(([k, v]) => [k, Math.round((v as number) * 100)])
+      ),
+      alignedPriorities: result.alignedPriorities.map((p) => p.questionText),
     },
   };
 
