@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+/research-exports/
+/research-data/
+/research-artifacts/
+__pycache__/
 
 # next.js
 /.next/
