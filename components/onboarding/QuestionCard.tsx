@@ -4,6 +4,7 @@ import type { Question } from "@/types/questionnaire";
 import { ScaleQuestion } from "./QuestionTypes/ScaleQuestion";
 import { MultiChoiceQuestion } from "./QuestionTypes/MultiChoiceQuestion";
 import { RankQuestion } from "./QuestionTypes/RankQuestion";
+import { PreferenceQuestion } from "./QuestionTypes/PreferenceQuestion";
 
 interface Props {
   question: Question;
@@ -14,6 +15,8 @@ interface Props {
 export function QuestionCard({ question, value, onChange }: Props) {
   const renderInput = () => {
     switch (question.type) {
+      case "PREFERENCE":
+        return <PreferenceQuestion question={question} value={value} onChange={onChange} />;
       case "SCALE":
         return (
           <ScaleQuestion
@@ -55,7 +58,11 @@ export function QuestionCard({ question, value, onChange }: Props) {
   return (
     <div className="space-y-6">
       <p className="text-lg font-semibold text-gray-800 leading-snug">{question.text}</p>
+      <p className="text-sm text-gray-500">{question.required ? "Required card" : "Optional"} · {question.description}</p>
       {renderInput()}
+      {!question.required && <button type="button" onClick={() => onChange(null)} className="text-sm text-gray-500 underline">
+        {value === null ? "Skipped" : "Skip this question"}
+      </button>}
     </div>
   );
 }

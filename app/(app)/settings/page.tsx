@@ -13,6 +13,12 @@ export default async function SettingsPage() {
       </div>
 
       <div className="divide-y divide-gray-50">
+        <Link href="/settings/research" className="block px-5 py-4 hover:bg-gray-50">
+          <p className="font-semibold">Relationship check-ins</p><p className="text-sm text-gray-400">Optional participation, private feedback, and data controls</p>
+        </Link>
+        <Link href="/settings/personality" className="block px-5 py-4 hover:bg-gray-50">
+          <p className="font-semibold">Personality reflection</p><p className="text-sm text-gray-400">Optional 20-item questionnaire and private scores</p>
+        </Link>
         <Link href="/settings/security" className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors">
           <div className="flex items-center gap-3">
             <span className="text-xl">🔒</span>
@@ -31,7 +37,7 @@ export default async function SettingsPage() {
             <span className="text-xl">📝</span>
             <div>
               <p className="font-semibold text-gray-800">Retake Questionnaire</p>
-              <p className="text-sm text-gray-400">Update your personality answers</p>
+              <p className="text-sm text-gray-400">Update your relationship answers and requirements</p>
             </div>
           </div>
           <span className="text-gray-300">›</span>

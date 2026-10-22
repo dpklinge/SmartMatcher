@@ -18,6 +18,9 @@ interface ProfileDetail {
   compatibility: {
     score: number;
     percentage: number;
+    coverage: number;
+    categoryCoverage: Record<string, number>;
+    eligibility: string;
     categoryBreakdown: Record<string, number>;
     alignedPriorities: string[];
   } | null;
@@ -89,7 +92,7 @@ export default function UserProfileScreen() {
         <Text style={styles.name}>{profile.name}, {profile.age}</Text>
         {compat && (
           <View style={[styles.scorePill, { backgroundColor: scoreColor }]}>
-            <Text style={styles.scorePillText}>{compat.percentage}% Compatible</Text>
+            <Text style={styles.scorePillText}>{compat.coverage > 0 && compat.eligibility === "ELIGIBLE" ? `${compat.percentage}% Alignment` : "More information needed"}</Text>
           </View>
         )}
         {profile.occupation && <Text style={styles.metaText}>💼 {profile.occupation}</Text>}
@@ -107,9 +110,10 @@ export default function UserProfileScreen() {
       {/* Compatibility breakdown */}
       {compat && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Compatibility Breakdown</Text>
+          <Text style={styles.sectionTitle}>Preference Alignment</Text>
+          <Text style={styles.metaText}>{Math.round(compat.coverage * 100)}% of preferences compared. Scores reflect accepted answers, not the chance of relationship success.</Text>
 
-          {Object.entries(compat.categoryBreakdown).map(([cat, pct]) => {
+          {Object.entries(compat.categoryBreakdown).filter(([cat]) => (compat.categoryCoverage[cat] ?? 0) > 0).map(([cat, pct]) => {
             const catKey = cat as QuestionCategory;
             const label = CATEGORY_LABELS[catKey] ?? cat;
             const icon = CATEGORY_ICONS[catKey] ?? "•";

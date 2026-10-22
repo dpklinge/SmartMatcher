@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { api } from "@/lib/api";
 import { Colors } from "@/constants/colors";
 import CardDeck from "@/components/discover/CardDeck";
@@ -22,6 +22,8 @@ interface ApiCandidate {
   compatibility: {
     score: number;
     percentage: number;
+    coverage: number;
+    categoryCoverage: Record<string, number>;
     breakdown: Record<string, number>;
   };
 }
@@ -36,8 +38,9 @@ export default function DiscoverScreen() {
   useFocusEffect(
     useCallback(() => {
       setError("");
-      api.get<{ candidates: ApiCandidate[] }>("/api/discover")
+      api.get<{ candidates: ApiCandidate[]; needsQuestionnaire?: boolean }>("/api/discover")
         .then((data) => {
+          if (data.needsQuestionnaire) { router.replace("/(app)/preferences"); setLoading(false); return; }
           const mapped = data.candidates.map((c) => {
             const allPhotos = c.profile?.photos?.map((p) => p.url) ?? [];
             const photoUrl = allPhotos[0] ?? c.image ?? undefined;
@@ -54,6 +57,8 @@ export default function DiscoverScreen() {
               photoUrl,
               photos: allPhotos,
               compatibilityScore: c.compatibility.percentage,
+              coverage: c.compatibility.coverage,
+              categoryCoverage: c.compatibility.categoryCoverage,
               categoryBreakdown: c.compatibility.breakdown,
             };
           });

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Modal, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Modal, ActivityIndicator, Alert } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { api } from "@/lib/api";
@@ -32,8 +32,8 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
       if (data.matched) {
         setMatchProfile(top);
       }
-    } catch {
-      // Swipe recorded best-effort; remove card regardless
+    } catch (e) {
+      Alert.alert("Could not save your choice", e instanceof Error ? e.message : "Refresh Discover and try again.");
     }
     setProfiles((p) => p.slice(1));
     setSwiping(false);
@@ -51,8 +51,8 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyEmoji}>🔍</Text>
-        <Text style={styles.emptyTitle}>No more profiles</Text>
-        <Text style={styles.emptySubtitle}>Check back later for new matches!</Text>
+        <Text style={styles.emptyTitle}>No introductions available</Text>
+        <Text style={styles.emptySubtitle}>Check back as more people complete their preferences, or review your requirements.</Text>
         {skipped.length > 0 && (
           <TouchableOpacity onPress={handleReloadSkipped} style={styles.reloadBtn}>
             <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.reloadGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -125,7 +125,7 @@ export default function CardDeck({ initialProfiles }: CardDeckProps) {
             </Text>
             {matchProfile?.compatibilityScore && (
               <View style={styles.matchScore}>
-                <Text style={styles.matchScoreText}>{matchProfile.compatibilityScore}% Compatible</Text>
+                <Text style={styles.matchScoreText}>{matchProfile.compatibilityScore}% Alignment</Text>
               </View>
             )}
             <TouchableOpacity

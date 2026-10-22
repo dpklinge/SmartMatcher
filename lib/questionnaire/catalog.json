@@ -1,0 +1,437 @@
+[
+  {
+    "id": "v2_intent",
+    "key": "v2_intent",
+    "category": "LIFE_GOALS",
+    "text": "What relationship are you seeking now?",
+    "type": "PREFERENCE",
+    "options": [
+      "Long-term partnership",
+      "Marriage-oriented dating",
+      "Casual dating",
+      "Exploring"
+    ],
+    "order": 1,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_structure",
+    "key": "v2_structure",
+    "category": "LIFE_GOALS",
+    "text": "Which relationship agreement do you want?",
+    "type": "PREFERENCE",
+    "options": [
+      "Monogamy",
+      "Consensual nonmonogamy",
+      "Not sure yet"
+    ],
+    "order": 2,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_existing_children",
+    "key": "v2_existing_children",
+    "category": "LIFE_GOALS",
+    "text": "Are you currently a parent?",
+    "type": "PREFERENCE",
+    "options": [
+      "I have children",
+      "I do not have children"
+    ],
+    "order": 3,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_future_children",
+    "key": "v2_future_children",
+    "category": "LIFE_GOALS",
+    "text": "Would you like to raise children or additional children?",
+    "type": "PREFERENCE",
+    "options": [
+      "Yes",
+      "No",
+      "Not sure yet"
+    ],
+    "order": 4,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_parenting_timeline",
+    "key": "v2_parenting_timeline",
+    "category": "LIFE_GOALS",
+    "text": "If you want children, what timing would work?",
+    "type": "PREFERENCE",
+    "options": [
+      "Within 2 years",
+      "In 3 to 5 years",
+      "More than 5 years from now",
+      "Flexible timing",
+      "I do not want children",
+      "Not sure yet"
+    ],
+    "order": 5,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_marriage",
+    "key": "v2_marriage",
+    "category": "LIFE_GOALS",
+    "text": "Do you want marriage in your future?",
+    "type": "PREFERENCE",
+    "options": [
+      "Yes",
+      "No",
+      "Not sure yet"
+    ],
+    "order": 6,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_home",
+    "key": "v2_home",
+    "category": "LIFE_GOALS",
+    "text": "Where would you want to build a shared life?",
+    "type": "PREFERENCE",
+    "options": [
+      "Big city",
+      "Suburbs",
+      "Small town or rural",
+      "Travel or no fixed home",
+      "Not sure yet"
+    ],
+    "order": 7,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_relocation",
+    "key": "v2_relocation",
+    "category": "LIFE_GOALS",
+    "text": "How open are you to relocating for a relationship?",
+    "type": "PREFERENCE",
+    "options": [
+      "Staying in my current area",
+      "Open within my country",
+      "Open internationally",
+      "Not sure yet"
+    ],
+    "order": 8,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_availability",
+    "key": "v2_availability",
+    "category": "LIFE_GOALS",
+    "text": "What time could you realistically make for in-person dates?",
+    "type": "PREFERENCE",
+    "options": [
+      "Several times a week",
+      "About once a week",
+      "A few times a month",
+      "Less often or long-distance"
+    ],
+    "order": 9,
+    "required": true,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_faith_practice",
+    "key": "v2_faith_practice",
+    "category": "VALUES_AND_BELIEFS",
+    "text": "What role would religious practice have in your shared home?",
+    "type": "PREFERENCE",
+    "options": [
+      "Regular shared religious practice",
+      "Individual practice without shared expectations",
+      "No religious practice",
+      "Not sure yet"
+    ],
+    "order": 10,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "This asks about daily practice, not whether two people share a faith. Discuss specific traditions and child-raising expectations together."
+  },
+  {
+    "id": "v2_household",
+    "key": "v2_household",
+    "category": "VALUES_AND_BELIEFS",
+    "text": "How would you want household and caregiving work arranged?",
+    "type": "PREFERENCE",
+    "options": [
+      "Share responsibilities regardless of gender",
+      "Agree on distinct roles together",
+      "Primarily take the household and caregiving role",
+      "Primarily take the paid-work role",
+      "Not sure yet"
+    ],
+    "order": 11,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_money",
+    "key": "v2_money",
+    "category": "VALUES_AND_BELIEFS",
+    "text": "What approach to everyday money decisions would work for you?",
+    "type": "PREFERENCE",
+    "options": [
+      "Plan a budget and save first",
+      "Balance saving with flexible spending",
+      "Prioritize spending on current experiences",
+      "Not sure yet"
+    ],
+    "order": 12,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_family",
+    "key": "v2_family",
+    "category": "VALUES_AND_BELIEFS",
+    "text": "How much involvement with extended family would you want?",
+    "type": "PREFERENCE",
+    "options": [
+      "Frequent contact and shared obligations",
+      "Regular contact with clear boundaries",
+      "Occasional contact",
+      "Little or no contact"
+    ],
+    "order": 13,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_alcohol",
+    "key": "v2_alcohol",
+    "category": "LIFESTYLE",
+    "text": "How often do you drink alcohol?",
+    "type": "PREFERENCE",
+    "options": [
+      "Do not drink",
+      "Occasionally",
+      "Weekly",
+      "Most days"
+    ],
+    "order": 14,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_smoking",
+    "key": "v2_smoking",
+    "category": "LIFESTYLE",
+    "text": "Do you smoke or vape tobacco?",
+    "type": "PREFERENCE",
+    "options": [
+      "No",
+      "Occasionally",
+      "Regularly"
+    ],
+    "order": 15,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_pets",
+    "key": "v2_pets",
+    "category": "LIFESTYLE",
+    "text": "What pets could be part of your shared home?",
+    "type": "PREFERENCE",
+    "options": [
+      "Dogs",
+      "Cats",
+      "Dogs and cats",
+      "Other pets only",
+      "No pets"
+    ],
+    "order": 16,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_shared_time",
+    "key": "v2_shared_time",
+    "category": "LIFESTYLE",
+    "text": "How much leisure time would you ideally spend with a partner?",
+    "type": "PREFERENCE",
+    "options": [
+      "Most of our leisure time",
+      "A balance of shared and separate time",
+      "Mostly independent leisure time"
+    ],
+    "order": 17,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_contact",
+    "key": "v2_contact",
+    "category": "LIFESTYLE",
+    "text": "What contact between dates would feel comfortable?",
+    "type": "PREFERENCE",
+    "options": [
+      "Frequent messages throughout the day",
+      "A daily check-in",
+      "A few check-ins a week",
+      "Flexible contact"
+    ],
+    "order": 18,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Choose your answer, the answers you would accept in a partner, and whether this is a requirement. Unanswered or private information is not treated as agreement."
+  },
+  {
+    "id": "v2_intimacy",
+    "key": "v2_intimacy",
+    "category": "LIFESTYLE",
+    "text": "What sexual relationship would you want?",
+    "type": "PREFERENCE",
+    "options": [
+      "Sex is an important part of my relationship",
+      "Open to a sexual or nonsexual relationship",
+      "Want a nonsexual relationship",
+      "Not sure yet"
+    ],
+    "order": 19,
+    "required": false,
+    "matchingMode": "PREFERENCE",
+    "description": "Optional and private. This does not predict sexual satisfaction. Discuss affection, pace, consent, and changing boundaries together."
+  },
+  {
+    "id": "v2_regulation",
+    "key": "v2_regulation",
+    "category": "PERSONALITY",
+    "text": "When upset with someone close, how often do you pause before saying something hurtful?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 20,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  },
+  {
+    "id": "v2_return_to_conflict",
+    "key": "v2_return_to_conflict",
+    "category": "PERSONALITY",
+    "text": "After taking a break from a disagreement, how often do you return to resolve it?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 21,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  },
+  {
+    "id": "v2_repair",
+    "key": "v2_repair",
+    "category": "PERSONALITY",
+    "text": "When you hurt someone, how often do you acknowledge your part and follow up?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 22,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  },
+  {
+    "id": "v2_support",
+    "key": "v2_support",
+    "category": "PERSONALITY",
+    "text": "When someone close is upset, how often do you check what kind of support they want?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 23,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  },
+  {
+    "id": "v2_reliability",
+    "key": "v2_reliability",
+    "category": "PERSONALITY",
+    "text": "When you cannot keep a commitment, how often do you communicate promptly and make another plan?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 24,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  },
+  {
+    "id": "v2_feedback",
+    "key": "v2_feedback",
+    "category": "PERSONALITY",
+    "text": "After receiving difficult feedback, how often do you make a concrete change?",
+    "type": "SINGLE_CHOICE",
+    "options": [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Almost always",
+      "No opportunity / not sure",
+      "Prefer not to say"
+    ],
+    "order": 25,
+    "matchingMode": "BEHAVIOR",
+    "description": "Think about the last six months in close relationships. These experimental questions support reflection and are not used to rank people."
+  }
+]

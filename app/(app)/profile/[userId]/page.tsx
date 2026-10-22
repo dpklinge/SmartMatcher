@@ -1,37 +1,25 @@
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { computeCompatibility } from "@/lib/matching/algorithm";
+import { getPairCompatibility } from "@/lib/matching/service";
 import { CompatibilityBreakdown } from "@/components/profile/CompatibilityBreakdown";
 
 interface Props {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }
 
 export default async function UserProfilePage({ params }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { userId: targetId } = params;
+  const { userId: targetId } = await params;
   const requesterId = session.user.id;
 
-  const [targetUser, requesterAnswers, requesterPriorities, targetAnswers] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: targetId },
-      include: { profile: { include: { photos: { orderBy: { order: "asc" } } } } },
-    }),
-    prisma.questionnaireAnswer.findMany({ where: { userId: requesterId } }),
-    prisma.answerPriority.findMany({ where: { userId: requesterId } }),
-    prisma.questionnaireAnswer.findMany({ where: { userId: targetId } }),
+  const [targetUser, compatibility] = await Promise.all([
+    prisma.user.findUnique({ where: { id: targetId }, include: { profile: { include: { photos: { orderBy: { order: "asc" } } } } } }),
+    getPairCompatibility(requesterId, targetId),
   ]);
-
-  if (!targetUser) notFound();
-
-  const answerMap = Object.fromEntries(requesterAnswers.map((a) => [a.questionId, a.value]));
-  const priorityMap = Object.fromEntries(requesterPriorities.map((p) => [p.questionId, p.importance]));
-  const targetAnswerMap = Object.fromEntries(targetAnswers.map((a) => [a.questionId, a.value]));
-
-  const compatibility = computeCompatibility(answerMap, priorityMap, targetAnswerMap);
+  if (!targetUser || !compatibility) notFound();
 
   const profile = targetUser.profile;
   const age = profile?.birthDate
@@ -96,6 +84,9 @@ export default async function UserProfilePage({ params }: Props) {
           <h3 className="font-bold text-gray-700 mb-3">Compatibility</h3>
           <CompatibilityBreakdown
             percentage={compatibility.percentage}
+            coverage={compatibility.coverage}
+            categoryCoverage={compatibility.categoryCoverage}
+            eligibility={compatibility.eligibility}
             breakdown={compatibility.categoryBreakdown as Record<string, number>}
             alignedPriorities={compatibility.alignedPriorities}
           />

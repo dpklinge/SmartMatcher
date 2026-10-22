@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
-import { computeCompatibility } from "@/lib/matching/algorithm";
+import { getPairCompatibility } from "@/lib/matching/service";
 import { calculateAge } from "@/lib/utils";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
@@ -11,23 +11,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
   const requesterId = session.user.id;
   const { userId: targetId } = await params;
 
-  const [target, requesterAnswers, requesterPriorities, targetAnswers] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: targetId },
-      include: { profile: { include: { photos: { orderBy: { order: "asc" }, take: 1 } } } },
-    }),
-    prisma.questionnaireAnswer.findMany({ where: { userId: requesterId } }),
-    prisma.answerPriority.findMany({ where: { userId: requesterId } }),
-    prisma.questionnaireAnswer.findMany({ where: { userId: targetId } }),
+  const [target, result] = await Promise.all([
+    prisma.user.findUnique({ where: { id: targetId }, include: { profile: { include: { photos: { orderBy: { order: "asc" }, take: 1 } } } } }),
+    getPairCompatibility(requesterId, targetId),
   ]);
-
-  if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
-
-  const answerMap = Object.fromEntries(requesterAnswers.map((a) => [a.questionId, a.value]));
-  const priorityMap = Object.fromEntries(requesterPriorities.map((p) => [p.questionId, p.importance]));
-  const targetAnswerMap = Object.fromEntries(targetAnswers.map((a) => [a.questionId, a.value]));
-
-  const result = computeCompatibility(answerMap, priorityMap, targetAnswerMap);
+  if (!target || !result) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
   const profile = {
     id: target.id,
@@ -41,6 +29,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ user
     compatibility: {
       score: result.score,
       percentage: result.percentage,
+      coverage: result.coverage,
+      categoryCoverage: result.categoryCoverage,
+      eligibility: result.eligibility,
       categoryBreakdown: Object.fromEntries(
         Object.entries(result.categoryBreakdown).map(([k, v]) => [k, Math.round((v as number) * 100)])
       ),

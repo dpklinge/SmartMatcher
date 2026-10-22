@@ -1,15 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
+import { answerMap, missingRequiredAnswers } from "@/lib/questionnaire/answers";
 
-export async function POST(req: import("next/server").NextRequest) {
+export async function POST(req: NextRequest) {
   const session = await getSession(req);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: { onboardingStep: "PRIORITIES" },
-  });
-
+  const userId = session.user.id;
+  const missing = missingRequiredAnswers(answerMap(await prisma.questionnaireAnswer.findMany({ where: { userId } })));
+  if (missing.length) return NextResponse.json({ error: "Complete the required relationship questions first.", missing }, { status: 400 });
+  await prisma.user.updateMany({ where: { id: userId, onboardingStep: "QUESTIONNAIRE" }, data: { onboardingStep: "PRIORITIES" } });
   return NextResponse.json({ success: true, nextStep: "PRIORITIES" });
 }

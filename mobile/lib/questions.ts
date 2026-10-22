@@ -1,5 +1,5 @@
 export type QuestionCategory = "PERSONALITY" | "LIFE_GOALS" | "VALUES_AND_BELIEFS" | "LIFESTYLE";
-export type QuestionType = "SCALE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "RANK";
+export type QuestionType = "SCALE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "RANK" | "PREFERENCE";
 export type Importance = "NOT_IMPORTANT" | "SOMEWHAT_IMPORTANT" | "IMPORTANT";
 
 export interface Question {
@@ -12,6 +12,9 @@ export interface Question {
   minLabel?: string;
   maxLabel?: string;
   order: number;
+  required?: boolean;
+  description?: string;
+  matchingMode?: "PREFERENCE" | "CONTEXT" | "BEHAVIOR";
 }
 
 export const CATEGORY_LABELS: Record<QuestionCategory, string> = {
@@ -35,8 +38,11 @@ export const IMPORTANCE_LABELS: Record<Importance, string> = {
 };
 
 export const CATEGORIES: QuestionCategory[] = [
-  "PERSONALITY",
   "LIFE_GOALS",
   "VALUES_AND_BELIEFS",
   "LIFESTYLE",
+  "PERSONALITY",
 ];
+
+export interface PreferenceAnswer { self: string; acceptable: string[]; required: boolean; }
+export type AnswerValue = string | string[] | number | PreferenceAnswer | null;

@@ -4,11 +4,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { QuestionCard } from "@/components/onboarding/QuestionCard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { QUESTIONS, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/questionnaire/questions";
-import type { Question } from "@/types/questionnaire";
+import { QUESTIONS, QUESTIONNAIRE_VERSION, CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/questionnaire/questions";
+import { isValidAnswer } from "@/lib/questionnaire/answers";
 import { cn } from "@/lib/utils";
 
-const CATEGORIES = ["PERSONALITY", "LIFE_GOALS", "VALUES_AND_BELIEFS", "LIFESTYLE"];
+const CATEGORIES = ["LIFE_GOALS", "VALUES_AND_BELIEFS", "LIFESTYLE", "PERSONALITY"];
 
 export default function QuestionnairePage() {
   const router = useRouter();
@@ -17,32 +17,29 @@ export default function QuestionnairePage() {
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const category = CATEGORIES[currentCategoryIdx];
   const categoryQuestions = QUESTIONS.filter((q) => q.category === category);
   const question = categoryQuestions[currentQuestionIdx];
-  const totalAnswered = Object.keys(answers).length;
+  const totalAnswered = QUESTIONS.filter(q => isValidAnswer(q, answers[q.id])).length;
   const progress = totalAnswered / QUESTIONS.length;
 
   useEffect(() => {
     fetch("/api/questionnaire")
-      .then((r) => r.json())
-      .then((data) => {
-        const loaded: Record<string, unknown> = {};
-        for (const [qId, val] of Object.entries(data.answers as Record<string, string>)) {
-          try { loaded[qId] = JSON.parse(val); } catch { loaded[qId] = val; }
-        }
-        setAnswers(loaded);
-      })
+      .then(async r => { if (!r.ok) throw new Error("Could not load your questionnaire."); return r.json(); })
+      .then(data => setAnswers(data.answers))
+      .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
   const saveCurrentAnswer = useCallback(async (qId: string, value: unknown) => {
-    await fetch("/api/questionnaire", {
+    const response = await fetch("/api/questionnaire", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers: { [qId]: value } }),
+      body: JSON.stringify({ version: QUESTIONNAIRE_VERSION, answers: { [qId]: value } }),
     });
+    if (!response.ok) throw new Error((await response.json()).error ?? "Could not save your answer.");
   }, []);
 
   const handleAnswer = (value: unknown) => {
@@ -50,23 +47,21 @@ export default function QuestionnairePage() {
   };
 
   const goNext = async () => {
-    // Save current answer
-    if (answers[question.id] !== undefined) {
-      await saveCurrentAnswer(question.id, answers[question.id]);
-    }
-
-    if (currentQuestionIdx < categoryQuestions.length - 1) {
-      setCurrentQuestionIdx((i) => i + 1);
-    } else if (currentCategoryIdx < CATEGORIES.length - 1) {
-      setCurrentCategoryIdx((i) => i + 1);
-      setCurrentQuestionIdx(0);
-    } else {
-      // All done
-      setSaving(true);
-      await fetch("/api/questionnaire/complete", { method: "POST" });
-      router.push("/onboarding/priorities");
-      router.refresh();
-    }
+    setSaving(true); setError("");
+    try {
+      const value = answers[question.id] === undefined && !question.required ? null : answers[question.id];
+      await saveCurrentAnswer(question.id, value);
+      setAnswers(prev => ({ ...prev, [question.id]: value }));
+      if (currentQuestionIdx < categoryQuestions.length - 1) setCurrentQuestionIdx(i => i + 1);
+      else if (currentCategoryIdx < CATEGORIES.length - 1) {
+        setCurrentCategoryIdx(i => i + 1); setCurrentQuestionIdx(0);
+      } else {
+        const response = await fetch("/api/questionnaire/complete", { method: "POST" });
+        if (!response.ok) throw new Error((await response.json()).error ?? "Complete required questions first.");
+        router.push("/onboarding/priorities"); router.refresh();
+      }
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not save your answer."); }
+    finally { setSaving(false); }
   };
 
   const goBack = () => {
@@ -86,10 +81,11 @@ export default function QuestionnairePage() {
 
   const isFirst = currentCategoryIdx === 0 && currentQuestionIdx === 0;
   const isLast = currentCategoryIdx === CATEGORIES.length - 1 && currentQuestionIdx === categoryQuestions.length - 1;
-  const hasAnswer = answers[question?.id] !== undefined;
+  const hasAnswer = isValidAnswer(question, answers[question.id]) || (!question.required && answers[question.id] === undefined);
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {error && <p role="alert" className="px-6 text-sm text-red-600">{error}</p>}
       {/* Top bar */}
       <div className="px-4 pt-6 pb-4 bg-white sticky top-0 z-10 border-b border-gray-50">
         <div className="max-w-lg mx-auto">

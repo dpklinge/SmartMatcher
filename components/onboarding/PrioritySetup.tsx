@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Question } from "@/types/questionnaire";
-import { IMPORTANCE_LABELS, IMPORTANCE_COLORS } from "@/lib/matching/weights";
+import { QUESTIONNAIRE_VERSION } from "@/lib/questionnaire/questions";
 import { CATEGORY_LABELS, CATEGORY_ICONS } from "@/lib/questionnaire/questions";
 import { cn } from "@/lib/utils";
 
@@ -16,12 +16,14 @@ interface Props {
 
 const IMPORTANCE_OPTIONS: Importance[] = ["NOT_IMPORTANT", "SOMEWHAT_IMPORTANT", "IMPORTANT"];
 
-export function PrioritySetup({ questions, initialPriorities }: Props) {
+export function PrioritySetup({ questions: allQuestions, initialPriorities }: Props) {
+  const questions = allQuestions.filter(q => q.matchingMode === "PREFERENCE");
   const router = useRouter();
   const [priorities, setPriorities] = useState<Record<string, Importance>>(
     initialPriorities ?? Object.fromEntries(questions.map((q) => [q.id, "SOMEWHAT_IMPORTANT"]))
   );
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const categories = [...new Set(questions.map((q) => q.category))];
 
@@ -30,15 +32,17 @@ export function PrioritySetup({ questions, initialPriorities }: Props) {
   };
 
   const save = async () => {
-    setSaving(true);
-    await fetch("/api/priorities", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ priorities }),
-    });
-    await fetch("/api/priorities/complete", { method: "POST" });
-    router.push("/discover");
-    router.refresh();
+    setSaving(true); setError("");
+    try {
+      const response = await fetch("/api/priorities", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ version: QUESTIONNAIRE_VERSION, priorities: Object.fromEntries(
+          questions.map(q => [q.id, priorities[q.id] ?? "SOMEWHAT_IMPORTANT"])) }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error ?? "Could not save priorities.");
+      router.push("/discover"); router.refresh();
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not save priorities."); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -83,13 +87,15 @@ export function PrioritySetup({ questions, initialPriorities }: Props) {
         </div>
       ))}
 
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       <div className="pt-4">
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
           <h4 className="font-semibold text-sm text-gray-700 mb-2">How priorities work</h4>
+          <p className="text-xs text-gray-500 mb-2">Firm requirements always apply in both directions. Scores measure stated preferences, not the chance of relationship success.</p>
           <div className="space-y-1 text-xs text-gray-500">
-            <p>🔴 <strong>Important</strong> — heavily weighted in your compatibility score</p>
+            <p>🔴 <strong>Important</strong> — more influence on preference alignment</p>
             <p>🟡 <strong>Somewhat Important</strong> — moderately weighted</p>
-            <p>⚪ <strong>Not Important</strong> — excluded from scoring</p>
+            <p>⚪ <strong>Not Important</strong> — excluded from preference ranking; firm requirements still apply</p>
           </div>
         </div>
         <button

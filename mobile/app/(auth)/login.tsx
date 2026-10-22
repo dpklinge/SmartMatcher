@@ -45,7 +45,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (googleResponse?.type === "success") {
-      const idToken = googleResponse.params.id_token ?? (googleResponse as Record<string, unknown>).authentication?.idToken;
+      const idToken = googleResponse.params.id_token ?? googleResponse.authentication?.idToken;
       if (idToken) handleOAuth("google", { idToken });
     }
   }, [googleResponse]);

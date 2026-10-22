@@ -5,7 +5,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { Colors } from "@/constants/colors";
-import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORIES, type QuestionCategory, type QuestionType } from "@/lib/questions";
+import { PreferenceQuestion } from "@/components/questionnaire/PreferenceQuestion";
+import { CATEGORY_LABELS, CATEGORY_ICONS, CATEGORIES, type QuestionCategory, type QuestionType, type AnswerValue } from "@/lib/questions";
 
 interface Question {
   id: string;
@@ -17,12 +18,15 @@ interface Question {
   minLabel?: string;
   maxLabel?: string;
   order: number;
+  required?: boolean;
+  description?: string;
 }
 
-type Answers = Record<string, string | string[] | number>;
+type Answers = Record<string, AnswerValue>;
 
 export default function QuestionnaireScreen() {
   const updateUser = useAuthStore((s) => s.updateUser);
+  const [version, setVersion] = useState<number>();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
   const [categoryIndex, setCategoryIndex] = useState(0);
@@ -31,18 +35,14 @@ export default function QuestionnaireScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get<{ questions: Question[]; answers: Record<string, string> }>("/api/questionnaire")
+    api.get<{ version: number; questions: Question[]; answers: Answers }>("/api/questionnaire")
       .then((data) => {
         setQuestions(data.questions);
-        // Pre-fill with existing answers
-        const prefilled: Answers = {};
-        for (const [qId, val] of Object.entries(data.answers)) {
-          try { prefilled[qId] = JSON.parse(val); } catch { prefilled[qId] = val; }
-        }
-        setAnswers(prefilled);
+        setVersion(data.version);
+        setAnswers(data.answers);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { setError("Could not load your questionnaire. Go back and try again."); setLoading(false); });
   }, []);
 
   const currentCategory = CATEGORIES[categoryIndex];
@@ -50,7 +50,7 @@ export default function QuestionnaireScreen() {
   const answeredCount = categoryQuestions.filter((q) => answers[q.id] !== undefined).length;
   const isLastCategory = categoryIndex === CATEGORIES.length - 1;
 
-  const setAnswer = (id: string, value: string | string[] | number) => {
+  const setAnswer = (id: string, value: AnswerValue) => {
     setAnswers((p) => ({ ...p, [id]: value }));
   };
 
@@ -61,22 +61,21 @@ export default function QuestionnaireScreen() {
   };
 
   const handleNext = async () => {
-    if (!isLastCategory) {
-      setCategoryIndex((i) => i + 1);
-      return;
-    }
+    const invalid = categoryQuestions.some(q => (q.required || (q.type === "PREFERENCE" && answers[q.id] != null)) && !isCompletePreference(answers[q.id]));
+    if (invalid) { setError("Answer each required card and select at least one acceptable partner answer."); return; }
     setSaving(true); setError("");
     try {
-      // Backend takes Record<string, unknown> — pass values directly
-      const answersPayload: Record<string, unknown> = {};
-      for (const [qId, val] of Object.entries(answers)) {
-        answersPayload[qId] = val;
+      const payload = Object.fromEntries(categoryQuestions.map(q => [q.id, answers[q.id] ?? null]));
+      await api.post("/api/questionnaire", { version, answers: payload });
+      setAnswers(prev => ({ ...prev, ...payload }));
+      if (!isLastCategory) setCategoryIndex(i => i + 1);
+      else {
+        await api.post("/api/questionnaire/complete", {});
+        updateUser({ onboardingStep: "PRIORITIES" });
+        router.replace("/(onboarding)/priorities");
       }
-      await api.post("/api/questionnaire", { answers: answersPayload });
-      updateUser({ onboardingStep: "PRIORITIES" });
-      router.replace("/(onboarding)/priorities");
     } catch (e) { setError((e as Error).message); }
-    setSaving(false);
+    finally { setSaving(false); }
   };
 
   if (loading) {
@@ -107,6 +106,9 @@ export default function QuestionnaireScreen() {
           <View key={q.id} style={styles.questionCard}>
             <Text style={styles.questionNum}>Q{qi + 1}</Text>
             <Text style={styles.questionText}>{q.text}</Text>
+            <Text style={styles.rankHint}>{q.required ? "Required card" : "Optional"} · {q.description}</Text>
+            {q.type === "PREFERENCE" && <PreferenceQuestion options={q.options ?? []} value={answers[q.id]} onChange={v => setAnswer(q.id, v)} />}
+            {!q.required && <TouchableOpacity onPress={() => setAnswer(q.id, null)}><Text style={styles.rankHint}>{answers[q.id] === null ? "Skipped" : "Skip this question"}</Text></TouchableOpacity>}
 
             {q.type === "SCALE" && (
               <ScaleQuestion
@@ -151,7 +153,7 @@ export default function QuestionnaireScreen() {
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={handleNext} disabled={saving} style={styles.nextBtn}>
+        <TouchableOpacity onPress={handleNext} disabled={saving || !version} style={styles.nextBtn}>
           <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             {saving ? <ActivityIndicator color="#fff" /> : (
               <Text style={styles.nextText}>{isLastCategory ? "Finish →" : "Next →"}</Text>
@@ -161,6 +163,10 @@ export default function QuestionnaireScreen() {
       </View>
     </View>
   );
+}
+
+function isCompletePreference(value: AnswerValue | undefined): boolean {
+  return !!value && typeof value === "object" && !Array.isArray(value) && !!value.self && value.acceptable.length > 0;
 }
 
 function ScaleQuestion({ value, onChange, minLabel, maxLabel }: {

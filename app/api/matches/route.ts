@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/mobile-auth";
 import { prisma } from "@/lib/prisma";
+import { getPairCompatibility } from "@/lib/matching/service";
 
 export async function GET(req: import("next/server").NextRequest) {
   const session = await getSession(req);
@@ -32,21 +33,16 @@ export async function GET(req: import("next/server").NextRequest) {
 
   const pendingLikeRows = likeSwipes.filter((s) => !matchedUserIds.has(s.targetId));
 
-  // Batch-fetch cached compatibility scores for pending likes
-  const pendingTargetIds = pendingLikeRows.map((s) => s.targetId);
-  const cacheEntries = pendingTargetIds.length > 0
-    ? await prisma.compatibilityCache.findMany({
-        where: { requesterId: userId, targetId: { in: pendingTargetIds } },
-      })
-    : [];
-  const cacheMap = Object.fromEntries(cacheEntries.map((c) => [c.targetId, c.score]));
+  const targetIds = [...new Set([...matchedUserIds, ...pendingLikeRows.map(s => s.targetId)])];
+  const pairs = await Promise.all(targetIds.map(async id => [id, await getPairCompatibility(userId, id)] as const));
+  const scores = Object.fromEntries(pairs.map(([id, pair]) => [id, pair?.eligibility === "ELIGIBLE" ? pair.score : 0]));
 
   const matches = matchRows.map((m) => {
     const other = m.user1Id === userId ? m.user2 : m.user1;
     return {
       matchId: m.id,
       matchedAt: m.matchedAt,
-      score: Math.round(m.score * 100),
+      score: Math.round((scores[m.user1Id === userId ? m.user2Id : m.user1Id] ?? 0) * 100),
       user: { id: other.id, name: other.name, image: other.image, profile: other.profile },
     };
   });
@@ -54,7 +50,7 @@ export async function GET(req: import("next/server").NextRequest) {
   const pendingLikes = pendingLikeRows.map((s) => ({
     swipeId: s.id,
     likedAt: s.swipedAt,
-    score: Math.round((cacheMap[s.targetId] ?? 0) * 100),
+    score: Math.round((scores[s.targetId] ?? 0) * 100),
     user: { id: s.target.id, name: s.target.name, image: s.target.image, profile: s.target.profile },
   }));
 

@@ -20,6 +20,8 @@ interface Candidate {
   } | null;
   compatibility: {
     percentage: number;
+    coverage: number;
+    categoryCoverage: Record<string, number>;
     breakdown: Record<string, number>;
   };
 }
@@ -144,23 +146,24 @@ export function SwipeCard({ candidate, onSwipe, isTop, zIndex }: Props) {
                 <p className="text-white/70 text-sm">{candidate.profile.occupation}</p>
               )}
             </div>
-            <CompatibilityBadge percentage={candidate.compatibility.percentage} />
+            <CompatibilityBadge percentage={candidate.compatibility.percentage} coverage={candidate.compatibility.coverage} />
           </div>
 
+          <p className="text-xs text-white/80 mb-3">{Math.round(candidate.compatibility.coverage * 100)}% of preferences compared</p>
           {/* Category breakdown */}
           <div className="grid grid-cols-2 gap-2 mb-3">
-            {Object.entries(breakdown).map(([cat, score]) => (
+            {Object.entries(breakdown).filter(([cat]) => (candidate.compatibility.categoryCoverage[cat] ?? 0) > 0).map(([cat, score]) => (
               <div key={cat} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5">
                 <span className="text-sm">{CATEGORY_ICONS[cat]}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <span className="text-white/80 text-xs truncate">{CATEGORY_LABELS[cat]}</span>
-                    <span className="text-white text-xs font-semibold ml-1">{Math.round(score * 100)}%</span>
+                    <span className="text-white text-xs font-semibold ml-1">{Math.round(score)}%</span>
                   </div>
                   <div className="h-1 bg-white/20 rounded-full mt-1">
                     <div
                       className="h-1 bg-rose-400 rounded-full"
-                      style={{ width: `${Math.round(score * 100)}%` }}
+                      style={{ width: `${Math.round(score)}%` }}
                     />
                   </div>
                 </div>

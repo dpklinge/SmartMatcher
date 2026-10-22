@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { SwipeCard } from "./SwipeCard";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
@@ -17,6 +18,8 @@ interface Candidate {
   } | null;
   compatibility: {
     percentage: number;
+    coverage: number;
+    categoryCoverage: Record<string, number>;
     breakdown: Record<string, number>;
   };
 }
@@ -24,15 +27,18 @@ interface Candidate {
 export function CardDeck() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [needsQuestionnaire, setNeedsQuestionnaire] = useState(false);
+  const [error, setError] = useState("");
   const [swipeResult, setSwipeResult] = useState<{ matched: boolean; name: string } | null>(null);
 
   const fetchCandidates = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/discover");
-    if (res.ok) {
+    try {
+      const res = await fetch("/api/discover");
+      if (!res.ok) throw new Error("Could not load introductions. Please try again.");
       const data = await res.json();
-      setCandidates(data.candidates);
-    }
+      setCandidates(data.candidates); setNeedsQuestionnaire(!!data.needsQuestionnaire); setError("");
+    } catch (e) { setError(e instanceof Error ? e.message : "Could not load introductions."); }
     setLoading(false);
   }, []);
 
@@ -56,6 +62,9 @@ export function CardDeck() {
         setSwipeResult({ matched: true, name: candidate.name ?? "Someone" });
         setTimeout(() => setSwipeResult(null), 3000);
       }
+    } else {
+      setError((await res.json()).error ?? "Could not save your choice.");
+      return;
     }
 
     // Fetch more when deck is getting low
@@ -73,12 +82,19 @@ export function CardDeck() {
     );
   }
 
+  if (needsQuestionnaire) return <div className="p-8 text-center space-y-4">
+    <h2 className="text-xl font-bold">Update your relationship preferences</h2>
+    <p>Choose your answers, acceptable partner answers, and firm requirements before discovering people.</p>
+    <Link href="/onboarding/questionnaire" className="inline-block rounded-xl bg-rose-500 px-6 py-3 text-white">Update questionnaire</Link>
+  </div>;
+  if (error) return <div className="p-8 text-center"><p role="alert">{error}</p><button onClick={fetchCandidates}>Try again</button></div>;
+
   if (!loading && candidates.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-6 px-8 text-center">
         <div className="text-6xl">🎉</div>
-        <h2 className="text-2xl font-bold text-gray-800">You've seen everyone!</h2>
-        <p className="text-gray-500">Check back later for new matches, or update your preferences.</p>
+        <h2 className="text-2xl font-bold text-gray-800">No introductions available</h2>
+        <p className="text-gray-500">Check back as more people complete their preferences, or review your requirements.</p>
         <button
           onClick={fetchCandidates}
           className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-2xl font-semibold"

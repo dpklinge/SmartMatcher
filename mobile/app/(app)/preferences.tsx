@@ -8,9 +8,10 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { api } from "@/lib/api";
 import { Colors } from "@/constants/colors";
+import { PreferenceQuestion } from "@/components/questionnaire/PreferenceQuestion";
 import {
   CATEGORY_LABELS, CATEGORY_ICONS, CATEGORIES,
-  type QuestionCategory, type QuestionType, type Importance,
+  type QuestionCategory, type QuestionType, type Importance, type AnswerValue,
 } from "@/lib/questions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,9 +26,12 @@ interface Question {
   minLabel?: string;
   maxLabel?: string;
   order: number;
+  required?: boolean;
+  description?: string;
+  matchingMode?: string;
 }
 
-type Answers = Record<string, string | string[] | number>;
+type Answers = Record<string, AnswerValue>;
 type PriorityMap = Record<string, Importance>;
 
 const IMPORTANCE_OPTIONS: { value: Importance; label: string; color: string; bg: string }[] = [
@@ -40,6 +44,7 @@ const IMPORTANCE_OPTIONS: { value: Importance; label: string; color: string; bg:
 
 export default function PreferencesScreen() {
   const [tab, setTab] = useState<"answers" | "priorities">("answers");
+  const [version, setVersion] = useState<number>();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answers>({});
   const [priorities, setPriorities] = useState<PriorityMap>({});
@@ -51,25 +56,22 @@ export default function PreferencesScreen() {
 
   useEffect(() => {
     Promise.all([
-      api.get<{ questions: Question[]; answers: Record<string, string> }>("/api/questionnaire"),
+      api.get<{ version: number; questions: Question[]; answers: Answers }>("/api/questionnaire"),
       api.get<{ priorities: Record<string, string> }>("/api/priorities"),
     ]).then(([qData, pData]) => {
       setQuestions(qData.questions);
 
-      const prefilled: Answers = {};
-      for (const [qId, val] of Object.entries(qData.answers)) {
-        try { prefilled[qId] = JSON.parse(val); } catch { prefilled[qId] = val; }
-      }
-      setAnswers(prefilled);
+      setVersion(qData.version);
+      setAnswers(qData.answers);
 
       const prefillPriorities: PriorityMap = {};
-      qData.questions.forEach((q) => {
+      qData.questions.filter(q => q.matchingMode === "PREFERENCE").forEach((q) => {
         prefillPriorities[q.id] =
           (pData.priorities[q.id] as Importance) ?? "SOMEWHAT_IMPORTANT";
       });
       setPriorities(prefillPriorities);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => { setError("Could not load preferences. Go back and try again."); setLoading(false); });
   }, []);
 
   const showBanner = (msg: string) => {
@@ -82,7 +84,7 @@ export default function PreferencesScreen() {
     try {
       const payload: Record<string, unknown> = {};
       for (const [qId, val] of Object.entries(answers)) payload[qId] = val;
-      await api.post("/api/questionnaire", { answers: payload });
+      await api.post("/api/questionnaire", { version, answers: payload });
       showBanner("Answers saved");
     } catch (e) { setError((e as Error).message); }
     setSaving(false);
@@ -91,13 +93,13 @@ export default function PreferencesScreen() {
   const savePriorities = async () => {
     setSaving(true); setError("");
     try {
-      await api.post("/api/priorities", { priorities: priorities as Record<string, string> });
+      await api.post("/api/priorities", { version, priorities: priorities as Record<string, string> });
       showBanner("Priorities saved");
     } catch (e) { setError((e as Error).message); }
     setSaving(false);
   };
 
-  const setAnswer = useCallback((id: string, value: string | string[] | number) => {
+  const setAnswer = useCallback((id: string, value: AnswerValue) => {
     setAnswers((p) => ({ ...p, [id]: value }));
   }, []);
 
@@ -183,6 +185,9 @@ export default function PreferencesScreen() {
               <View key={q.id} style={styles.questionCard}>
                 <Text style={styles.questionNum}>Q{qi + 1}</Text>
                 <Text style={styles.questionText}>{q.text}</Text>
+                <Text style={styles.rankHint}>{q.required ? "Required card" : "Optional"} · {q.description}</Text>
+                {q.type === "PREFERENCE" && <PreferenceQuestion options={q.options ?? []} value={answers[q.id]} onChange={v => setAnswer(q.id, v)} />}
+                {!q.required && <TouchableOpacity onPress={() => setAnswer(q.id, null)}><Text style={styles.rankHint}>{answers[q.id] === null ? "Skipped" : "Skip this question"}</Text></TouchableOpacity>}
                 {q.type === "SCALE" && (
                   <ScaleQuestion value={answers[q.id] as number} onChange={(v) => setAnswer(q.id, v)} minLabel={q.minLabel} maxLabel={q.maxLabel} />
                 )}
@@ -213,7 +218,7 @@ export default function PreferencesScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity onPress={saveAnswers} disabled={saving} style={styles.nextBtn}>
+              <TouchableOpacity onPress={saveAnswers} disabled={saving || !version} style={styles.nextBtn}>
                 <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                   {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.nextText}>Save Answers</Text>}
                 </LinearGradient>
@@ -228,13 +233,13 @@ export default function PreferencesScreen() {
         <View style={styles.flex}>
           <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
             <Text style={styles.priorityHint}>
-              Set how much each topic matters when finding your matches.
+              Firm requirements always apply in both directions. Set priorities for preference alignment.
               {Object.values(priorities).filter((v) => v === "IMPORTANT").length > 0
                 ? ` ${Object.values(priorities).filter((v) => v === "IMPORTANT").length} marked important.`
                 : ""}
             </Text>
             {CATEGORIES.map((cat) => {
-              const catQs = questions.filter((q) => q.category === cat);
+              const catQs = questions.filter((q) => q.category === cat && q.matchingMode === "PREFERENCE");
               if (catQs.length === 0) return null;
               return (
                 <View key={cat} style={styles.categorySection}>
@@ -269,7 +274,7 @@ export default function PreferencesScreen() {
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity onPress={savePriorities} disabled={saving} style={styles.nextBtn}>
+            <TouchableOpacity onPress={savePriorities} disabled={saving || !version} style={styles.nextBtn}>
               <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.nextText}>Save Priorities</Text>}
               </LinearGradient>

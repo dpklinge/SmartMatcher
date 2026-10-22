@@ -13,6 +13,7 @@ interface Question {
   category: QuestionCategory;
   type: QuestionType;
   order: number;
+  matchingMode?: string;
 }
 
 type PriorityMap = Record<string, Importance>;
@@ -25,6 +26,7 @@ const IMPORTANCE_OPTIONS: { value: Importance; label: string; color: string; bg:
 
 export default function PrioritiesScreen() {
   const updateUser = useAuthStore((s) => s.updateUser);
+  const [version, setVersion] = useState<number>();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [priorities, setPriorities] = useState<PriorityMap>({});
   const [loading, setLoading] = useState(true);
@@ -32,22 +34,22 @@ export default function PrioritiesScreen() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get<{ questions: Question[] }>("/api/questionnaire")
-      .then((data) => {
-        setQuestions(data.questions);
-        // Default all to SOMEWHAT_IMPORTANT
-        const defaults: PriorityMap = {};
-        data.questions.forEach((q) => { defaults[q.id] = "SOMEWHAT_IMPORTANT"; });
-        setPriorities(defaults);
-        setLoading(false);
-      }).catch(() => setLoading(false));
+    Promise.all([
+      api.get<{ version: number; questions: Question[] }>("/api/questionnaire"),
+      api.get<{ priorities: PriorityMap }>("/api/priorities"),
+    ]).then(([data, saved]) => {
+      const current = data.questions.filter(q => q.matchingMode === "PREFERENCE");
+      setQuestions(current); setVersion(data.version);
+      setPriorities(Object.fromEntries(current.map(q => [q.id, saved.priorities[q.id] ?? "SOMEWHAT_IMPORTANT"])));
+      setLoading(false);
+    }).catch(() => { setError("Could not load priorities. Go back and try again."); setLoading(false); });
   }, []);
 
   const handleSave = async () => {
     setSaving(true); setError("");
     try {
       // Backend takes Record<string, string>
-      await api.post("/api/priorities", { priorities: priorities as Record<string, string> });
+      await api.post("/api/priorities", { version, priorities: priorities as Record<string, string> });
       updateUser({ onboardingStep: "COMPLETE" });
       router.replace("/(app)/discover");
     } catch (e) { setError((e as Error).message); }
@@ -77,7 +79,7 @@ export default function PrioritiesScreen() {
         <Text style={styles.step}>Step 3 of 3</Text>
         <Text style={styles.title}>Your Priorities</Text>
         <Text style={styles.subtitle}>
-          Tell us what matters most to you.{importantCount > 0 ? ` ${importantCount} marked as important.` : ""}
+          Firm requirements always apply to both people. These priorities rank preference alignment.{importantCount > 0 ? ` ${importantCount} marked as important.` : ""}
         </Text>
       </View>
 
@@ -117,7 +119,7 @@ export default function PrioritiesScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSave} disabled={saving} style={styles.saveBtn}>
+        <TouchableOpacity onPress={handleSave} disabled={saving || !version} style={styles.saveBtn}>
           <LinearGradient colors={["#f43f5e", "#ec4899"]} style={styles.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Find My Matches →</Text>}
           </LinearGradient>

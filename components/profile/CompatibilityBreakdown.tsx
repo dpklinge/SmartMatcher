@@ -12,11 +12,14 @@ interface AlignedPriority {
 
 interface Props {
   percentage: number;
+  coverage?: number;
+  eligibility?: string;
+  categoryCoverage?: Record<string, number>;
   breakdown: Record<string, number>;
   alignedPriorities?: AlignedPriority[];
 }
 
-export function CompatibilityBreakdown({ percentage, breakdown, alignedPriorities = [] }: Props) {
+export function CompatibilityBreakdown({ percentage, breakdown, coverage = 0, eligibility = "ELIGIBLE", categoryCoverage = {}, alignedPriorities = [] }: Props) {
   const color =
     percentage >= 80
       ? "from-emerald-500 to-teal-500"
@@ -29,16 +32,17 @@ export function CompatibilityBreakdown({ percentage, breakdown, alignedPrioritie
       {/* Overall score */}
       <div className="flex flex-col items-center py-6 bg-gray-50 rounded-2xl">
         <div className={cn("w-24 h-24 rounded-full bg-gradient-to-br flex items-center justify-center text-white mb-2", color)}>
-          <span className="text-3xl font-black">{percentage}%</span>
+          <span className="text-3xl font-black">{coverage > 0 && eligibility === "ELIGIBLE" ? `${percentage}%` : "—"}</span>
         </div>
-        <p className="font-bold text-gray-800 text-lg">Compatibility</p>
-        <p className="text-gray-500 text-sm">Based on your priorities</p>
+        <p className="font-bold text-gray-800 text-lg">Preference alignment</p>
+        <p className="text-gray-500 text-sm">Alignment with both people’s accepted answers</p>
       </div>
 
+      <p className="text-xs text-gray-500">{Math.round(coverage * 100)}% of weighted preferences could be compared. {eligibility !== "ELIGIBLE" ? "Requirements are unresolved or incompatible. " : ""}This is not a probability of relationship success.</p>
       {/* Category breakdown */}
       <div className="space-y-3">
         <h4 className="font-bold text-gray-700">By Category</h4>
-        {Object.entries(breakdown).map(([cat, score]) => {
+        {Object.entries(breakdown).filter(([cat]) => (categoryCoverage[cat] ?? 0) > 0).map(([cat, score]) => {
           const pct = Math.round(score * 100);
           return (
             <div key={cat} className="space-y-1">
@@ -63,7 +67,7 @@ export function CompatibilityBreakdown({ percentage, breakdown, alignedPrioritie
       {/* Aligned priorities */}
       {alignedPriorities.length > 0 && (
         <div className="space-y-3">
-          <h4 className="font-bold text-gray-700">🎯 Strong Matches on Your Priorities</h4>
+          <h4 className="font-bold text-gray-700">🎯 Accepted Answers on Your Priorities</h4>
           <div className="space-y-2">
             {alignedPriorities.slice(0, 5).map((p, i) => (
               <div key={i} className="flex items-start gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
@@ -71,7 +75,7 @@ export function CompatibilityBreakdown({ percentage, breakdown, alignedPrioritie
                 <div className="flex-1">
                   <p className="text-sm text-gray-700 leading-snug">{p.questionText}</p>
                   <p className="text-xs text-emerald-600 font-medium mt-0.5">
-                    {CATEGORY_ICONS[p.category]} {CATEGORY_LABELS[p.category]} · {Math.round(p.similarity * 100)}% similar
+                    {CATEGORY_ICONS[p.category]} {CATEGORY_LABELS[p.category]} · {Math.round(p.similarity * 100)}% aligned
                   </p>
                 </div>
               </div>

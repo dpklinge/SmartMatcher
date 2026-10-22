@@ -5,6 +5,14 @@ export interface CompatibilityResult {
   percentage: number;
   categoryBreakdown: Record<QuestionCategory, number>;
   alignedPriorities: AlignedPriority[];
+  coverage: number;
+  categoryCoverage: Record<QuestionCategory, number>;
+  directionalScores: { requester: number; target: number };
+  eligibility: "ELIGIBLE" | "INCOMPATIBLE" | "UNRESOLVED";
+  conflictQuestionIds: string[];
+  unresolvedQuestionIds: string[];
+  questionnaireVersion: number;
+  scoringVersion: string;
 }
 
 export interface AlignedPriority {

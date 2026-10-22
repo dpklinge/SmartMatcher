@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   percentage: number;
+  coverage?: number;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
 }
 
-export function CompatibilityBadge({ percentage, size = "md", showLabel = true }: Props) {
+export function CompatibilityBadge({ percentage, coverage, size = "md", showLabel = true }: Props) {
   const color =
     percentage >= 80
       ? "from-emerald-400 to-teal-500"
@@ -33,9 +34,9 @@ export function CompatibilityBadge({ percentage, size = "md", showLabel = true }
           color
         )}
       >
-        {percentage}%
+        {coverage === 0 ? "—" : `${percentage}%`}
       </div>
-      {showLabel && <span className="text-xs text-gray-500 font-medium">Match</span>}
+      {showLabel && <span className="text-xs text-gray-500 font-medium">Alignment</span>}
     </div>
   );
 }

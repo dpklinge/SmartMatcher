@@ -80,6 +80,10 @@ model User {
   conversations1  Conversation[] @relation("ConvUser1")
   conversations2  Conversation[] @relation("ConvUser2")
   sentMessages    Message[]
+  researchConsent ResearchConsent?
+  matchBaselines MatchBaseline[]
+  relationshipFeedback RelationshipFeedback[]
+  personalityAssessment PersonalityAssessment?
 }
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
@@ -185,8 +189,66 @@ model Match {
   user2     User     @relation("MatchUser2", fields: [user2Id], references: [id])
   matchedAt DateTime @default(now())
   score     Float
+  baselines MatchBaseline[]
+  feedback RelationshipFeedback[]
 
   @@unique([user1Id, user2Id])
+}
+
+// Each participant owns their records; neither partner's responses are shared.
+model ResearchConsent {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled Boolean @default(false)
+  policyVersion String
+  grantedAt DateTime?
+  withdrawnAt DateTime?
+  updatedAt DateTime @updatedAt
+}
+
+model MatchBaseline {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId String
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  capturedAt DateTime @default(now())
+  consentVersion String
+  questionnaireVersion Int
+  scoringVersion String
+  answersJson String
+  prioritiesJson String
+  personalityJson String?
+
+  @@unique([userId, matchId])
+}
+
+model RelationshipFeedback {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchId String
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  stage String
+  status String
+  metAt DateTime?
+  relationshipStartedAt DateTime?
+  satisfaction Int?
+  respect Int?
+  wantsToContinue String?
+  reportedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, matchId, stage])
+  @@index([userId])
+}
+
+model PersonalityAssessment {
+  userId String @id
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  instrumentVersion String
+  answersJson String
+  completedAt DateTime @updatedAt
 }
 
 model CompatibilityCache {

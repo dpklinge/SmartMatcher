@@ -39,7 +39,8 @@ export default auth((req) => {
       return NextResponse.redirect(new URL(redirect, nextUrl));
     }
 
-    if (isOnboarding && step === "COMPLETE") {
+    const isPreferenceEdit = pathname === "/onboarding/questionnaire" || pathname === "/onboarding/priorities";
+    if (isOnboarding && step === "COMPLETE" && !isPreferenceEdit) {
       return NextResponse.redirect(new URL("/discover", nextUrl));
     }
   }

@@ -1,5 +1,5 @@
 export type QuestionCategory = "PERSONALITY" | "LIFE_GOALS" | "VALUES_AND_BELIEFS" | "LIFESTYLE";
-export type QuestionType = "SCALE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "RANK";
+export type QuestionType = "SCALE" | "SINGLE_CHOICE" | "MULTI_CHOICE" | "RANK" | "PREFERENCE";
 export type Importance = "NOT_IMPORTANT" | "SOMEWHAT_IMPORTANT" | "IMPORTANT";
 
 export interface Question {
@@ -12,7 +12,19 @@ export interface Question {
   minLabel?: string;
   maxLabel?: string;
   order: number;
+  required?: boolean;
+  matchingMode?: "PREFERENCE" | "CONTEXT" | "BEHAVIOR";
+  description?: string;
 }
+
+export interface PreferenceAnswer {
+  self: string;
+  acceptable: string[];
+  required: boolean;
+}
+
+export type AnswerValue = number | string | string[] | PreferenceAnswer | null;
+export type AnswerMap = Record<string, unknown>;
 
 export interface QuestionnaireAnswer {
   questionId: string;

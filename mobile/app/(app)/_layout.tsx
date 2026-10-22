@@ -41,6 +41,8 @@ export default function AppLayout() {
         options={{ title: "Settings", tabBarIcon: ({ color }) => <TabIcon emoji="⚙️" color={color} /> }}
       />
       {/* Hidden routes — not shown in tab bar */}
+      <Tabs.Screen name="research" options={{ href: null }} />
+      <Tabs.Screen name="personality" options={{ href: null }} />
       <Tabs.Screen name="preferences" options={{ href: null }} />
       <Tabs.Screen name="activities/[id]" options={{ href: null }} />
       <Tabs.Screen name="messages/[id]" options={{ href: null }} />

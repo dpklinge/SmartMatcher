@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getPairCompatibility } from "@/lib/matching/service";
 
 export default async function MatchesPage() {
   const session = await auth();
@@ -17,16 +18,17 @@ export default async function MatchesPage() {
     orderBy: { matchedAt: "desc" },
   });
 
-  const formatted = matches.map((m) => {
+  const formatted = await Promise.all(matches.map(async (m) => {
     const other = m.user1Id === userId ? m.user2 : m.user1;
+    const pair = await getPairCompatibility(userId, other.id);
     const photo = other.profile?.photos?.[0]?.url ?? other.image;
     return {
       matchId: m.id,
       matchedAt: m.matchedAt,
-      score: Math.round(m.score * 100),
+      score: pair && pair.coverage > 0 && pair.eligibility === "ELIGIBLE" ? Math.round(pair.score * 100) : null,
       user: { id: other.id, name: other.name, photo },
     };
-  });
+  }));
 
   return (
     <div className="min-h-screen bg-white">
@@ -65,8 +67,8 @@ export default async function MatchesPage() {
               </div>
               <div className="flex-shrink-0 text-right">
                 <div className="inline-flex items-center gap-1 bg-rose-50 text-rose-600 px-3 py-1 rounded-full">
-                  <span className="text-sm font-bold">{m.score}%</span>
-                  <span className="text-xs">match</span>
+                  <span className="text-sm font-bold">{m.score === null ? "Review preferences" : `${m.score}%`}</span>
+                  <span className="text-xs">alignment</span>
                 </div>
               </div>
             </Link>

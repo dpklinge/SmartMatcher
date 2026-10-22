@@ -26,6 +26,8 @@ export interface CardProfile {
   photoUrl?: string;
   photos?: string[];
   compatibilityScore?: number;
+  coverage?: number;
+  categoryCoverage?: Record<string, number>;
   categoryBreakdown?: Record<string, number>;
 }
 
@@ -132,12 +134,13 @@ export default function SwipeCard({ profile, onSwipeLeft, onSwipeRight, isTop }:
           {/* 2. Match percentage & category breakdown */}
           {score > 0 && (
             <View style={styles.scoreSection}>
+              <Text style={{ fontSize: 11, color: "#6b7280" }}>{Math.round((profile.coverage ?? 0) * 100)}% of preferences compared</Text>
               <View style={[styles.scoreBadge, { backgroundColor: scoreColor }]}>
-                <Text style={styles.scoreText}>{score}% Match</Text>
+                <Text style={styles.scoreText}>{score}% Alignment</Text>
               </View>
               {profile.categoryBreakdown && Object.keys(profile.categoryBreakdown).length > 0 && (
                 <View style={styles.breakdown}>
-                  {Object.entries(profile.categoryBreakdown).map(([cat, pct]) => (
+                  {Object.entries(profile.categoryBreakdown).filter(([cat]) => (profile.categoryCoverage?.[cat] ?? 0) > 0).map(([cat, pct]) => (
                     <View key={cat} style={styles.breakdownRow}>
                       <Text style={styles.breakdownLabel}>{cat}</Text>
                       <View style={styles.breakdownBar}>

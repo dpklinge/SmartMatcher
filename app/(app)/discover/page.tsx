@@ -12,7 +12,7 @@ export default async function DiscoverPage() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
         <div>
           <h1 className="text-xl font-black text-gray-900">💞 Discover</h1>
-          <p className="text-xs text-gray-400">Ranked by your compatibility</p>
+          <p className="text-xs text-gray-400">Ranked by mutual preference alignment</p>
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold text-gray-700">{session.user.name}</p>

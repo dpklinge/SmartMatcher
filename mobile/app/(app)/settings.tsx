@@ -163,6 +163,13 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
+        <TouchableOpacity onPress={() => router.push("/(app)/research")} style={{ padding: 18, backgroundColor: "#fff1f2", borderRadius: 12, marginBottom: 12 }}>
+          <Text style={{ fontWeight: "700" }}>Relationship check-ins</Text><Text>Optional participation, private feedback, and data controls</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/(app)/personality")} style={{ padding: 18, backgroundColor: "#fff1f2", borderRadius: 12, marginBottom: 12 }}>
+          <Text style={{ fontWeight: "700" }}>Personality reflection</Text><Text>Optional 20-item questionnaire and private scores</Text>
+        </TouchableOpacity>
+
         <Text style={styles.pageTitle}>Settings ⚙️</Text>
 
         {success ? (
