@@ -11,6 +11,24 @@ const { CONSENT_VERSION, addMonths } = pure("lib/research/contracts.ts");
 const { personalityScores, validPersonalityAnswers } = pure("lib/questionnaire/personality.ts");
 const { prepareResearchDataset } = pure("lib/research/dataset.ts");
 const { feedbackSchema } = pure("lib/research/validation.ts");
+const { researchFeatures } = pure("lib/research/features.ts");
+const { computeCompatibility } = pure("lib/matching/algorithm.ts");
+
+test("offline pair features are symmetric, versioned, and ignore later reports", () => {
+  const fit = computeCompatibility({}, {}, {}, {});
+  const personality = JSON.stringify({ version: "mini-ipip-2006-1", answers: Array(20).fill(3) });
+  const other = JSON.stringify({ version: "mini-ipip-2006-1", answers: Array(20).fill(4) });
+  const values = researchFeatures(fit, [personality, other]);
+  assert.deepEqual(values, researchFeatures(fit, [other, personality]));
+  assert.equal(values.trait_0_mean, 3);
+  assert.equal(values.trait_0_difference, 0);
+  assert.equal(values.LIFE_GOALS_alignment, null);
+  for (const malformed of [null, "bad JSON", JSON.stringify({ version: "old", answers: Array(20).fill(3) }),
+    JSON.stringify({ version: "mini-ipip-2006-1", answers: [3] })]) {
+    assert.equal(researchFeatures(fit, [personality, malformed]).trait_0_mean, null);
+  }
+  assert.ok(!Object.keys(values).some(key => /satisfaction|respect|status|reported/.test(key)));
+});
 
 test("Mini-IPIP scoring reverses the correct items and rejects incomplete answers", () => {
   assert.ok(!validPersonalityAnswers(Array(19).fill(3)));
@@ -41,6 +59,12 @@ test("research export excludes missing consent, missing meeting evidence, and sa
   const secret = "s".repeat(32), consent = new Set(["private-a", "private-b"]);
   const exported = prepareResearchDataset([match], consent, secret);
   assert.equal(exported.includedPairs, 1);
+  assert.equal(exported.schemaVersion, 2);
+  assert.equal(exported.pairs[0].baselineMonth, "2025-01");
+  assert.equal(exported.pairs[0].participants[0].reports[0].reportedMonth, "2025-01");
+  assert.equal(exported.pairs[0].participants[0].reports[0].daysAfterMeeting, 1);
+  assert.equal(exported.pairs[0].participants[0].reports[0].checkpointDelayDays, null);
+  assert.ok(!JSON.stringify(exported).includes("2025-01-01"));
   assert.ok(!JSON.stringify(exported).includes("private-a"));
   assert.ok(!JSON.stringify(exported).includes("private-match-id"));
   assert.equal(exported.pairs[0].participants[0].reports[0].satisfaction, null);

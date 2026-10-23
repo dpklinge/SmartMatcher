@@ -2,7 +2,7 @@
 
 Implemented October 21, 2026, from the relationship research assessment.
 
-Updated October 22: the next phase is documented in [relationship outcomes and measurement](relationship-outcomes-and-measurement.md). The development database has since been reset and reseeded with the user's authorization, and the unused legacy catalog/scorer have been removed. The rollout notes below describe the initial implementation.
+Updated October 22: optional personality measurement, consented follow-ups, external-data benchmarking and prospective evaluation tooling are documented in [relationship outcomes and measurement](relationship-outcomes-and-measurement.md) and the [phase tracker](implementation-phases.md). The development database has since been reset and reseeded with the user's authorization, and the unused legacy catalog/scorer have been removed. The rollout notes below describe the initial implementation.
 
 ## Included
 
